@@ -152,6 +152,3 @@ if __name__ == "__main__":
         f = os.path.join(directory, dir, filename)
         last_file = f.replace('-','') 
         normalize_audio(f, last_file)
-
-
-

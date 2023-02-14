@@ -46,6 +46,14 @@ class Net(nn.Module):
         return x
 
 
+# Define the sizes for the neural network
+
+EPOCHS = 50
+input_size = 10584064
+hidden_size = 64
+output_size = 3 
+
+
 # Here we convert our audio file to a tensor; we do this so we can pass the audio tensors through the deep learning model
 
 def audio_to_tensor(FILE_PATH):
@@ -80,45 +88,75 @@ def get_label(FILE_PATH):
     
     return label
 
-# Create trainset (array with data and labels)
-trainset_x = []
-trainset_y = []
+def train_model():
 
-directory = os.path.join(os.getcwd(), 'audio')
+    # Create trainset (array with data and labels)
+    trainset_x = []
+    trainset_y = []
 
-for dir in os.listdir(directory):
-    for filename in os.listdir(os.path.join(directory, dir)):
-        f = os.path.join(directory, dir, filename)
-        if os.path.isfile(f):
-            trainset_x.append(audio_to_tensor(f))
-            trainset_y.append(get_label(f))
+    directory = os.path.join(os.getcwd(), 'audio')
 
-# Shuffle the trainsets
-random.shuffle(trainset_x)
-random.shuffle(trainset_y)
+    for dir in os.listdir(directory):
+        for filename in os.listdir(os.path.join(directory, dir)):
+            f = os.path.join(directory, dir, filename)
+            if os.path.isfile(f):
+                trainset_x.append(audio_to_tensor(f))
+                trainset_y.append(get_label(f))
 
-# Run the network
-EPOCHS = 5
-input_size = 10584064
-hidden_size = 64
-output_size = 3 
+    # Shuffle the trainsets
+    random.shuffle(trainset_x)
+    random.shuffle(trainset_y)
+    model = Net(input_size, hidden_size, output_size)
+    loss_fn = nn.MSELoss()
+    optim = torch.optim.Adam(model.parameters(), 0.00000001)
 
-model = Net(input_size, hidden_size, output_size)
-loss_fn = nn.MSELoss()
-optim = torch.optim.Adam(model.parameters(), 0.00000001)
+    for epoch in range(EPOCHS):
 
-for epoch in range(EPOCHS):
+        for i in range(len(trainset_x)):
+    
+            outputs = model(trainset_x[i])
+            loss = loss_fn(outputs, trainset_y[i])
 
-    print(f'EPOCH: {epoch} STARTING')
+            optim.zero_grad()
+            loss.backward()
 
-    for i in range(len(trainset_x)):
+            optim.step()
 
-        outputs = model(trainset_x[i])
-        loss = loss_fn(outputs, trainset_y[i])
+            print(loss)
 
-        optim.zero_grad()
-        loss.backward()
+def predict_artist(tensor):
+    model_state_dict = torch.load('model.pth')
+    loaded_model = Net(input_size, hidden_size, output_size)
+    loaded_model.load_state_dict(model_state_dict)
 
-        optim.step()
+    loaded_model.eval()
 
-        print(loss)
+    with torch.no_grad():
+        return loaded_model(tensor)
+
+def UI_artist(path):
+    tensor = audio_to_tensor(path)
+    
+    output = predict_artist(tensor)
+
+    output_list = output.tolist()
+    
+    max = float('-inf')
+    at_num = -1
+    
+    for i in range(len(output_list)):
+
+        if output_list[i] > max:
+            max = output[i]
+            at_num = i
+
+    if at_num == 0:
+        return 'Ariana Grande'
+
+    elif at_num == 1:
+        return 'Kendrick Lamar'
+
+    elif at_num == 2:
+        return 'Travis Scott'
+
+#print(UI_artist('PATH HERE'))

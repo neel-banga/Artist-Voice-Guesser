@@ -7,6 +7,9 @@ import numpy
 import scrapetube
 import youtube_dl
 
+import librosa
+import soundfile as sf
+
 
 class Audio:
 
@@ -39,9 +42,9 @@ class Audio:
       # Here we're removing the old mp4 file
       os.remove(input_file)
 
-      # Make sure audio is over two minutes
+      # Make sure audio is over 31 seconds
 
-      command = f'ffmpeg -i {new_file} -t 120 -c copy {new_file.replace(".wav", "0.wav")}'
+      command = f'ffmpeg -i {new_file} -t 31 -c copy {new_file.replace(".wav", "0.wav")}'
       os.system(command)
       os.remove(new_file)
       # Rename the file to the proper name
@@ -52,8 +55,8 @@ class Audio:
   # Let's normalize the audio down to 2 min
   def normalize_audio(self, input_file, last_file):
     if os.path.isfile(input_file):
-        # This command will trim the file down to 120 seconds or 2 min, the ">/dev/null 2>&1" part simply hides the output
-        command = f'ffmpeg -i {input_file} -ss 0 -to 120 -c copy {last_file} >/dev/null 2>&1'
+        # This command will trim the file down to 30 seconds or 2 min, the ">/dev/null 2>&1" part simply hides the output
+        command = f'ffmpeg -i {input_file} -ss 0 -to 30 -c copy {last_file} >/dev/null 2>&1'
         os.system(command)
         os.remove(input_file)
 
@@ -137,7 +140,6 @@ if __name__ == "__main__":
   directory = os.path.join(os.getcwd(), 'audio')
   start(directory)
 
-
   def normalize_audio(input_file, last_file):
     if os.path.isfile(input_file):
         # This command will trim the file down to 120 seconds or 2 min, the ">/dev/null 2>&1" part simply hides the output
@@ -152,3 +154,6 @@ if __name__ == "__main__":
         f = os.path.join(directory, dir, filename)
         last_file = f.replace('-','') 
         normalize_audio(f, last_file)
+
+
+
